@@ -1,0 +1,3 @@
+C:/Users/henry/MySideProjects/quant-pairs/cmake-build-debug/CMakeFiles/pairs_backtester.dir
+C:/Users/henry/MySideProjects/quant-pairs/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/henry/MySideProjects/quant-pairs/cmake-build-debug/CMakeFiles/rebuild_cache.dir
