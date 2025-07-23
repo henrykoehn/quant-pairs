@@ -12,7 +12,7 @@ using namespace std;
 
 int dataScrape(const string& ticker1, const string& ticker2)
 {
-    string command = "python \"C:\\Users\\henry\\MySideProject\\quant-pairs\\downloadData.py\" " + ticker1 + " " + ticker2;
+    string command = "python \"C:\\Users\\henry\\MySideProjects\\quant-pairs\\downloadData.py\" " + ticker1 + " " + ticker2;
 
     int result = system(command.c_str());
 

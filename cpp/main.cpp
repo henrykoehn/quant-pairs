@@ -76,8 +76,8 @@ int main()
         return 1;
     }
 
-    auto data1 = loadClose("C:/Users/henry/MySideProject/quant-pairs/data/" + ticker1 + ".csv");
-    auto data2 = loadClose("C:/Users/henry/MySideProject/quant-pairs/data/" + ticker2 + ".csv");
+    auto data1 = loadClose("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker1 + ".csv");
+    auto data2 = loadClose("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker2 + ".csv");
 
     if (data1.empty() || data2.empty()) {
         cout << "Failed to load price data.\n";
@@ -145,8 +145,8 @@ int main()
     }
     cout << "Total return: " << cumulative.back() * 100 << "%" << endl;
 
-    auto d1 = loadDatedCloses("data/AAPL.csv");
-    auto d2 = loadDatedCloses("data/MSFT.csv");
+    auto d1 = loadDatedCloses("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker1 + ".csv");
+    auto d2 = loadDatedCloses("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker2 + ".csv");
 
     unordered_map<std::string, double> map2;
     for (auto& dc : d2)

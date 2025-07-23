@@ -1,0 +1,25 @@
+# Build folders
+build/
+cmake-build-debug/
+CMakeFiles/
+CMakeCache.txt
+*.ninja*
+Makefile
+
+# CLion / JetBrains project files
+.idea/
+*.iml
+
+# Compiled binaries and objects
+*.exe
+*.o
+*.obj
+*.out
+
+# Python
+__pycache__/
+*.pyc
+
+# Data and outputs
+data/
+trades.csv
