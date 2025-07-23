@@ -1,6 +1,0 @@
-# ninja log v6
-5	341	7749403955049254	CMakeFiles/pairs_backtester.dir/main.cpp.obj	a1ed0ca78085713
-342	413	7749403958423851	pairs_backtester.exe	9fa736219e3434a3
-3	236	7749400726599420	CMakeFiles/pairs_backtester.dir/dataScraper.cpp.obj	d00c31c70bae69d8
-14	640	7749381851291513	CMakeFiles/pairs_backtester.dir/compute.cpp.obj	27533a457bc0b901
-1	181	7749407000829205	build.ninja	4951e297acd0637
