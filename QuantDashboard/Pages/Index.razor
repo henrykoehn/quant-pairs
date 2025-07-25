@@ -1,0 +1,32 @@
+﻿@page "/"
+
+<PageTitle>Quant Dashboard</PageTitle>
+
+<h3>Quant pairs backtester</h3>
+
+<div class="mt-4">
+    <label>First Ticker:</label>
+    <InputText @bind-value="Ticker1" class="form-control" placeholder="e.g. WMT" />
+    
+    <label class="mt-2">Second Ticker:</label>
+    <InputText @bind-Value="Ticker2" class="form-control" placeholder="e.g. COST" />
+
+    <button class="btn btn-primary mt-3" @onclick="RunBacktest"> Run Backtest</button>
+</div>
+
+@if (ResultMessage is not null)
+{
+    <div class="alert alert-info mt-3">@ResultMessage</div>
+}
+
+@code{
+    private string Ticker1 = string.Empty;
+    private string Ticker2 = string.Empty;
+    private string? ResultMessage;
+
+    private void RunBacktest(){
+        //TODO
+        ResultMessage = $"Running backtest on {Ticker1} and {Ticker2}";
+    }
+}
+

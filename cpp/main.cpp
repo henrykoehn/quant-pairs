@@ -84,7 +84,7 @@ int main()
         return 1;
     }
 
-    cout << "Loaded " << data1.size() << " " << ticker1 << " closes and " << data2.size() << " " << ticker2 << " closes." << endl;
+    cout << "\nLoaded " << data1.size() << " " << ticker1 << " closes and " << data2.size() << " " << ticker2 << " closes." << endl;
 
     vector<double> spread;
     for(size_t i = 0; i < data1.size(); i++)
