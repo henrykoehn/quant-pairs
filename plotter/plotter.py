@@ -2,35 +2,46 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Get the correct file path
+# 1) Load and parse dates
 script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(script_dir)
-trades_path = os.path.join(project_root, "docs", "trades.csv")
+trades_path = os.path.join(os.path.dirname(script_dir), "docs", "trades.csv")
+df = pd.read_csv(trades_path, parse_dates=["Date"])
 
-# Read the data
-df = pd.read_csv(trades_path)
+# 2) Set Date as index for nicer plotting
+df.set_index("Date", inplace=True)
 
-# Plot configuration
 plt.figure(figsize=(12, 6))
 
-# Fixed column name: Changed 'CumulativePnL' to 'CumulativePNL'
-plt.plot(df["Date"], df["CumulativePNL"], label="Cumulative P&L", color="blue")
+# Plot cumulative P&L
+plt.plot(df.index, df["CumulativePNL"], label="Cumulative P&L")
 
-# Mark trades
-buy_signals = df[df["Signal"] == 1]
-sell_signals = df[df["Signal"] == -1]
+# Scatter trades
+buy = df[df["Signal"] == 1]
+sell = df[df["Signal"] == -1]
+plt.scatter(buy.index,
+            buy["CumulativePNL"],
+            color="green",
+            marker="^",
+            label="Long Entry")
 
-# Also fixed here: Changed 'CumulativePnL' to 'CumulativePNL'
-plt.scatter(buy_signals["Date"], buy_signals["CumulativePNL"], color="green", label="Long Entry", marker="^")
-plt.scatter(sell_signals["Date"], sell_signals["CumulativePNL"], color="red", label="Short Entry", marker="v")
+plt.scatter(sell.index,
+            sell["CumulativePNL"],
+            color="red",
+            marker="v",
+            label="Short Entry")
+
+# 3) Reduce date labels to ~10 ticks
+total = len(df)
+skip = max(1, total // 10)
+ticks = df.index[::skip]
+plt.xticks(ticks, [d.strftime("%Y-%m-%d") for d in ticks], rotation=45)
 
 plt.title("Strategy Cumulative P&L and Trades")
-plt.xlabel("Date")
 plt.ylabel("Cumulative Return")
-plt.xticks(rotation=45)
 plt.legend()
 plt.tight_layout()
-plt.savefig("strategy_performance.png")
-skip = max(1, len(df) // 10)  # show ~10 evenly spaced ticks
-plt.xticks(ticks=df.index[::skip], labels=df["Date"][::skip], rotation=45)
-plt.show()
+
+# 4) Save only—do NOT call plt.show()
+outdir = os.path.join(os.path.dirname(script_dir), "QuantDashboard", "wwwroot", "images")
+os.makedirs(outdir, exist_ok=True)
+plt.savefig(os.path.join(outdir, "strategy_performance.png"), dpi=150)

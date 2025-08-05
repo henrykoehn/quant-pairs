@@ -64,13 +64,15 @@ std::vector<DatedClose> loadDatedCloses(const std::string& path) {
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    string ticker1, ticker2;
-    cout << "Enter first ticker:" << endl;
-    cin >> ticker1;
-    cout << "Enter second ticker:" << endl;
-    cin >> ticker2;
+    if (argc < 3) {
+        cout << "Usage: pairs_backtester <TICKER1> <TICKER2>\n";
+        return 1;
+    }
+
+    string ticker1 = argv[1];
+    string ticker2 = argv[2];
 
     if (dataScrape(ticker1, ticker2) != 0) {
         return 1;

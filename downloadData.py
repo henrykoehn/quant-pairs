@@ -14,7 +14,7 @@ def download_and_save(ticker, start="2018-01-01", end="2023-01-01"):
 
     file_path = os.path.join(output_dir, f"{ticker.upper()}.csv")
     data[["Close"]].reset_index().to_csv(file_path, index=False)
-    print(f"✅ Saved {ticker} data to: {file_path}")
+    print(f"Saved {ticker} data to: {file_path}")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
