@@ -1,12 +1,9 @@
-//
-// Created by henry on 7/22/2025.
-//
+#ifndef DATASCRAPER_H
+#define DATASCRAPER_H
 
-#ifndef LOADDATA_H
-#define LOADDATA_H
 #include <string>
-using namespace std;
 
-int dataScrape(const string& ticker1, const string& ticker2);
+// Returns the exit code from fetchData.py (0 on success)
+int dataScrape(const std::string& ticker1, const std::string& ticker2);
 
-#endif //LOADDATA_H
+#endif // DATASCRAPER_H

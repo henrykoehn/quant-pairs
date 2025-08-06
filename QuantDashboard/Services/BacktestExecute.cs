@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,79 +10,78 @@ namespace QuantDashboard.Services
     {
         public async Task<string> RunAsync(string ticker1, string ticker2)
         {
-            // Paths to your scripts/executable
-            string scraperPath = @"C:\Users\henry\MySideProjects\quant-pairs\downloadData.py";
-            string backtesterPath = @"C:\Users\henry\MySideProjects\quant-pairs\cpp\cmake-build-debug\pairs_backtester.exe";
-            string plotterPath = @"C:\Users\henry\MySideProjects\quant-pairs\plotter\plotter.py";
+            var baseDir = AppContext.BaseDirectory;
+            string fetcherPath = Path.Combine(baseDir, "fetchData.py");
+            string backtesterExe = Path.Combine(baseDir, "pairs_backtester");
+            string plotterPath = Path.Combine(baseDir, "plotter.py");
 
             try
             {
-                // 1) Run the Python scraper
-                var pyInfo = new ProcessStartInfo("python", $"\"{scraperPath}\" {ticker1} {ticker2}")
+                // 1) Fetch or scrape/upload as needed
+                var fetchInfo = new ProcessStartInfo(
+                    "/usr/bin/python3",
+                    $"\"{fetcherPath}\" {ticker1} {ticker2}")
+                {
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = baseDir
+                };
+                using var fetch = Process.Start(fetchInfo)
+                    ?? throw new Exception("Could not start fetchData.py");
+                var fetchErr = await fetch.StandardError.ReadToEndAsync();
+                await fetch.WaitForExitAsync();
+                if (!string.IsNullOrWhiteSpace(fetchErr))
+                    return $"Fetch Error: {fetchErr.Trim()}";
+
+                // 2) Run the C++ backtester
+                var btInfo = new ProcessStartInfo(
+                    backtesterExe,
+                    $"{ticker1} {ticker2}")
                 {
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = baseDir
                 };
-                using (var py = Process.Start(pyInfo))
-                {
-                    if (py == null) throw new Exception("Failed to start scraper");
-                    string err = await py.StandardError.ReadToEndAsync();
-                    await py.WaitForExitAsync();
-                    if (!string.IsNullOrWhiteSpace(err))
-                        return $"Python Error: {err}";
-                }
+                using var bt = Process.Start(btInfo)
+                    ?? throw new Exception("Could not start pairs_backtester");
+                var btOut = await bt.StandardOutput.ReadToEndAsync();
+                var btErr = await bt.StandardError.ReadToEndAsync();
+                await bt.WaitForExitAsync();
+                if (!string.IsNullOrWhiteSpace(btErr))
+                    return $"Backtester Error: {btErr.Trim()}";
 
-                // 2) Run the C++ backtester and capture its output
-                string backtesterOutput;
-                var btInfo = new ProcessStartInfo(backtesterPath, $"{ticker1} {ticker2}")
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                using (var bt = Process.Start(btInfo))
-                {
-                    if (bt == null) throw new Exception("Failed to start backtester");
-                    backtesterOutput = await bt.StandardOutput.ReadToEndAsync();
-                    string btErr = await bt.StandardError.ReadToEndAsync();
-                    await bt.WaitForExitAsync();
-                    if (!string.IsNullOrWhiteSpace(btErr))
-                        return $"Backtester Error: {btErr}";
-                }
-
-                // 3) Parse out just the Total return line
-                var lines = backtesterOutput
+                // 3) Extract the Total return line
+                var lines = btOut
                     .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                string returnLine = lines
+                var returnLine = lines
                     .FirstOrDefault(l => l.Trim().StartsWith("Total return", StringComparison.OrdinalIgnoreCase))
-                    ?? lines.Last();
+                    ?? lines.Last().Trim();
 
-                // 4) Regenerate the plot image
-                var plotInfo = new ProcessStartInfo("python", $"\"{plotterPath}\"")
+                // 4) Regenerate the plot
+                var plotInfo = new ProcessStartInfo(
+                    "/usr/bin/python3",
+                    $"\"{plotterPath}\"")
                 {
-                    RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = baseDir
                 };
-                using (var plot = Process.Start(plotInfo))
-                {
-                    if (plot == null) throw new Exception("Failed to start plotter");
-                    string plotErr = await plot.StandardError.ReadToEndAsync();
-                    await plot.WaitForExitAsync();
-                    if (!string.IsNullOrWhiteSpace(plotErr))
-                        Console.WriteLine($"Plotter warning: {plotErr}");
-                }
+                using var plot = Process.Start(plotInfo)
+                    ?? throw new Exception("Could not start plotter.py");
+                var plotErr = await plot.StandardError.ReadToEndAsync();
+                await plot.WaitForExitAsync();
+                if (!string.IsNullOrWhiteSpace(plotErr))
+                    Console.WriteLine($"[Plotter Warning] {plotErr.Trim()}");
 
-                // 5) Return only the clean Total return
+                // 5) Return the clean message
                 return returnLine;
             }
             catch (Exception ex)
             {
-                // Log to console so you can see it in your 'dotnet run' window
                 Console.WriteLine($"[ERROR] {ex}");
                 return $"Execution Error: {ex.Message}";
             }

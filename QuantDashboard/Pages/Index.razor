@@ -3,27 +3,28 @@
 
 <PageTitle>Quant Dashboard</PageTitle>
 
-<h3 class="mt-4">Quant Pairs Backtester</h3>
+<h3>Quant Pairs Backtester</h3>
 
-<div class="mt-4">
-    <label for="ticker1">First Ticker:</label>
-    <InputText id="ticker1"
-               @bind-value="Ticker1"
-               class="form-control"
-               placeholder="e.g. WMT" />
+<EditForm Model="this" OnValidSubmit="RunBacktest">
+    <div class="mt-4">
+        <label for="ticker1">First Ticker:</label>
+        <InputText id="ticker1"
+                   class="form-control"
+                   placeholder="e.g. WMT"
+                   @bind-Value="Ticker1" />
 
-    <label for="ticker2" class="mt-3">Second Ticker:</label>
-    <InputText id="ticker2"
-               @bind-value="Ticker2"
-               class="form-control"
-               placeholder="e.g. COST" />
+        <label for="ticker2" class="mt-3">Second Ticker:</label>
+        <InputText id="ticker2"
+                   class="form-control"
+                   placeholder="e.g. COST"
+                   @bind-Value="Ticker2" />
 
-    <button class="btn btn-primary mt-4"
-            @onclick="RunBacktest"
-            disabled="@IsRunning">
-        @(IsRunning ? "Running…" : "Run Backtest")
-    </button>
-</div>
+        <button type="submit"
+                class="btn btn-primary mt-4">
+            Run Backtest
+        </button>
+    </div>
+</EditForm>
 
 @if (!string.IsNullOrEmpty(ResultMessage))
 {
@@ -32,62 +33,40 @@
     </div>
 }
 
-@if (ShowImage)
+@if (!string.IsNullOrEmpty(PlotImageUrl))
 {
     <div class="mt-4">
-        <h5>Strategy Performance</h5>
-        <figure>
-            <img src="images/strategy_performance.png?@ImageVersion"
-                 class="img-fluid rounded border"
-                 style="max-width:100%;"
-                 alt="Cumulative P&L plot" />
-            <figcaption class="text-muted mt-2">
-                This chart shows the strategy’s cumulative P&L over time for the two selected tickers.
-                ▲ green markers indicate when the strategy enters a long position,
-                ▼ red markers when it enters a short position.
-            </figcaption>
-        </figure>
+        <h4>Strategy Performance</h4>
+        <img src="@PlotImageUrl" 
+             alt="Strategy Performance" 
+             class="img-fluid" />
+        <p class="text-muted mt-2">
+            Below is your strategy’s cumulative P&L over time,
+            with green ▲ for long entries and red ▼ for short entries.
+        </p>
     </div>
 }
 
 @code {
-    private string Ticker1 = "";
-    private string Ticker2 = "";
+    // bound by the EditForm
+    public string Ticker1 { get; set; } = string.Empty;
+    public string Ticker2 { get; set; } = string.Empty;
+
     private string? ResultMessage;
-    private bool IsRunning = false;
-    private bool ShowImage = false;
-    private string ImageVersion = DateTime.Now.Ticks.ToString();
+    private string? PlotImageUrl;
 
     private async Task RunBacktest()
     {
-        if (string.IsNullOrWhiteSpace(Ticker1) ||
-            string.IsNullOrWhiteSpace(Ticker2))
-        {
-            ResultMessage = "Please enter two tickers.";
-            return;
-        }
-
-        IsRunning = true;
-        ShowImage = false;
+        // show spinner/text
         ResultMessage = "Running backtest…";
+        PlotImageUrl  = null;
+        StateHasChanged();
 
-        try
-        {
-            // Executes scraper, C++ backtester, then plotter.py
-            ResultMessage = await BacktestExecute.RunAsync(Ticker1, Ticker2);
+        // run the backtest
+        var output = await BacktestExecute.RunAsync(Ticker1, Ticker2);
+        ResultMessage = output;
 
-            // Once done, display the new plot
-            ImageVersion = DateTime.Now.Ticks.ToString();
-            ShowImage = true;
-        }
-        catch (Exception ex)
-        {
-            ResultMessage = $"UI Error: {ex.Message}";
-            ShowImage = false;
-        }
-        finally
-        {
-            IsRunning = false;
-        }
+        // update the plot URL (cache‐busted each run)
+        PlotImageUrl = $"images/strategy_performance.png?{DateTime.UtcNow.Ticks}";
     }
 }
