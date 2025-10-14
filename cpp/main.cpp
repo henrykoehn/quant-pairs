@@ -34,33 +34,55 @@ vector<double> loadClose(const string& path)
 }
 
 struct DatedClose {
-    std::string date;
+    string date;
     double close;
 };
 
-std::vector<DatedClose> loadDatedCloses(const std::string& path) {
-    std::ifstream in(path);
+vector<DatedClose> loadDatedCloses(const string& path) {
+    ifstream in(path);
     if (!in) {
-        std::cerr << "Failed opening " << path << "\n";
+        cerr << "Failed opening " << path << "\n";
         return {};
     }
 
-    std::string line;
-    std::getline(in, line); // skip header
+    string line;
+    if (!getline(in, line)) return {}; // header missing
 
-    std::vector<DatedClose> data;
-    while (std::getline(in, line)) {
-        std::istringstream ss(line);
-        std::string date, close_str;
-
-        std::getline(ss, date, ','); // Date
-        for (int i = 0; i < 4; ++i) std::getline(ss, close_str, ','); // skip to Close
-
-        double close = std::stod(close_str);
-        data.push_back({ date, close });
+    // Parse header to find indices
+    vector<string> headers;
+    {
+        istringstream hs(line);
+        string h;
+        while (getline(hs, h, ',')) headers.push_back(h);
     }
 
-    return data;
+    // Find "Date" and "Close" columns by name
+    int dateIdx = -1, closeIdx = -1;
+    for (int i = 0; i < (int)headers.size(); ++i) {
+        if (headers[i] == "Date")  dateIdx  = i;
+        if (headers[i] == "Close") closeIdx = i;
+    }
+    if (dateIdx < 0 || closeIdx < 0) {
+        cerr << "CSV missing Date or Close columns: " << path << "\n";
+        return {};
+    }
+
+    vector<DatedClose> out;
+    while (getline(in, line)) {
+        if (line.empty()) continue;
+        istringstream ss(line);
+        string field;
+        vector<string> cols;
+        while (getline(ss, field, ',')) cols.push_back(field);
+        if ((int)cols.size() <= max(dateIdx, closeIdx)) continue;
+
+        try {
+            out.push_back({ cols[dateIdx], stod(cols[closeIdx]) });
+        } catch (...) {
+            // skip bad rows
+        }
+    }
+    return out;
 }
 
 
@@ -78,8 +100,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    auto data1 = loadClose("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker1 + ".csv");
-    auto data2 = loadClose("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker2 + ".csv");
+    auto data1 = loadClose("data/" + ticker1 + ".csv");
+    auto data2 = loadClose("data/" + ticker2 + ".csv");
 
     if (data1.empty() || data2.empty()) {
         cout << "Failed to load price data.\n";
@@ -147,16 +169,16 @@ int main(int argc, char* argv[])
     }
     cout << "Total return: " << cumulative.back() * 100 << "%" << endl;
 
-    auto d1 = loadDatedCloses("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker1 + ".csv");
-    auto d2 = loadDatedCloses("C:/Users/henry/MySideProjects/quant-pairs/data/" + ticker2 + ".csv");
+    auto d1 = loadDatedCloses("data/" + ticker1 + ".csv");
+    auto d2 = loadDatedCloses("data/" + ticker2 + ".csv");
 
-    unordered_map<std::string, double> map2;
+    unordered_map<string, double> map2;
     for (auto& dc : d2)
         map2[dc.date] = dc.close;
 
     // Now align the two on shared dates:
-    std::vector<double> aapl, msft;
-    std::vector<std::string> dates;
+    vector<double> aapl, msft;
+    vector<string> dates;
 
     for (auto& dc1 : d1) {
         if (map2.count(dc1.date)) {

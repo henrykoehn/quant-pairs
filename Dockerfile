@@ -39,24 +39,31 @@ WORKDIR /app
 # 1) Install Python3 & pip + shim 'python' → 'python3'
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      python3 python3-pip python-is-python3 \
+      python3 python3-pip python-is-python3 ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# 2) Copy Blazor site
+# 2) Create shared folders for C++ and Python
+#    - /app/data      → for CSVs downloaded by fetchData.py and read by pairs_backtester
+#    - /app/wwwroot   → for trades.csv output served by Blazor
+RUN mkdir -p /app/data /app/wwwroot
+
+# 3) Copy Blazor site
 COPY --from=build-blazor /app/publish ./
 
-# 3) Copy Linux-built backtester
+# 4) Copy Linux-built backtester
 COPY --from=build-cpp /src/cpp/build/pairs_backtester ./pairs_backtester
 RUN chmod +x ./pairs_backtester
 
-# 4) Copy Python scripts & requirements
-COPY requirements.txt     .
-COPY fetchData.py         .
-COPY plotter/plotter.py   ./plotter.py
+# 5) Copy Python scripts & requirements
+COPY requirements.txt .
+COPY fetchData.py       .
+# (optional) only if you actually need plotter.py
+# COPY plotter/plotter.py ./plotter.py
 
-# 5) Install Python deps
+# 6) Install Python deps
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
-# 6) Expose & run
+# 7) Expose & run
 EXPOSE 80
 ENTRYPOINT ["dotnet", "QuantDashboard.dll"]
+
