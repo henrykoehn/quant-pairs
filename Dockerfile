@@ -57,8 +57,7 @@ RUN chmod +x ./pairs_backtester
 # 5) Copy Python scripts & requirements
 COPY requirements.txt .
 COPY fetchData.py       .
-# (optional) only if you actually need plotter.py
-# COPY plotter/plotter.py ./plotter.py
+COPY plotter/plotter.py ./plotter.py
 
 # 6) Install Python deps
 RUN python3 -m pip install --no-cache-dir -r requirements.txt

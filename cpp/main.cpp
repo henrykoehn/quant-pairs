@@ -123,5 +123,7 @@ int main(int argc, char* argv[]) {
     cout << "Total return: " << cumulative.back() * 100 << "%\n";
 
     exportToCSV(dates, signal, pnl, cumulative);
+    int rc = system("/usr/bin/python3 /app/plotter.py");
+    if (rc != 0) cerr << "plotter.py failed, exit code " << rc << "\n";
     return 0;
 }

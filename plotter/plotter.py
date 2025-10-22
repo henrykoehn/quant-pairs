@@ -14,8 +14,8 @@ plt.plot(df.index, df["CumulativePNL"], label="Cumulative P&L")
 
 buy  = df[df["Signal"] == 1]
 sell = df[df["Signal"] == -1]
-plt.scatter(buy.index,  buy["CumulativePNL"],  marker="^", label="Long Entry")
-plt.scatter(sell.index, sell["CumulativePNL"], marker="v", label="Short Entry")
+plt.scatter(buy.index,  buy["CumulativePNL"],  marker="^", color='green', label="Long Entry")
+plt.scatter(sell.index, sell["CumulativePNL"], marker="v", color='red', label="Short Entry")
 
 # Optional: show axis in percent to match the banner intuition
 plt.gca().yaxis.set_major_formatter(PercentFormatter(1.0))
